@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: migraine
+      POSTGRES_USER: migraine
+      POSTGRES_PASSWORD: migraine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U migraine -d migraine"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  php:
+    build:
+      context: ./backend
+    environment:
+      APP_ENV: local
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: migraine
+      DB_USERNAME: migraine
+      DB_PASSWORD: migraine
+      APP_TIMEZONE: Europe/Moscow
+      DEFAULT_USER_NAME: Demo User
+      DEFAULT_USER_EMAIL: demo@example.com
+      DEFAULT_USER_PASSWORD: password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -lc "php artisan migrate --force && php artisan db:seed --force && php-fpm"
+    volumes:
+      - ./backend:/var/www/html
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - php
+    ports:
+      - "0.0.0.0:8081:80"
+    volumes:
+      - ./backend:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  postgres_data:
