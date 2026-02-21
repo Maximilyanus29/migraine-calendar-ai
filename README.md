@@ -35,6 +35,17 @@ docker run --rm -u $(id -u):$(id -g) \
   node:22-alpine sh -lc "npm run build"
 ```
 
+```bash
+
+docker run --rm -u $(id -u):$(id -g) \
+  -v /opt/migraine-calendar-ai/backend:/app -w /app \
+  node:22-alpine sh -lc "npm install"
+
+docker run --rm -u $(id -u):$(id -g) \
+  -v /opt/migraine-calendar-ai/backend:/app -w /app \
+  node:22-alpine sh -lc "npm run build"
+```
+
 ## Быстрая проверка API
 ```bash
 curl -i -c cookie.txt -X POST http://localhost:8081/api/v1/auth/login \
