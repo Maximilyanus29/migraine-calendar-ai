@@ -41,9 +41,41 @@
       <fieldset>
         <legend>Что спровоцировало</legend>
         <div class="chip-grid">
-          <label v-for="item in options.triggers" :key="item" class="chip">
+          <label
+            v-for="item in standardOptions('triggers')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.triggers.includes(item) }"
+          >
             <input type="checkbox" :value="item" v-model="form.triggers" />
-            <span>{{ item }}</span>
+            <span>{{ optionLabel('triggers', item) }}</span>
+          </label>
+        </div>
+
+        <div class="custom-inline-add">
+          <input
+            v-model="customOptionDraft.triggers"
+            type="text"
+            maxlength="80"
+            placeholder="Добавить свой триггер"
+            @keydown.enter.prevent="addCustomOption('triggers')"
+          />
+          <button type="button" class="btn" :disabled="customOptionLoading.triggers" @click="addCustomOption('triggers')">
+            {{ customOptionLoading.triggers ? 'Добавляем...' : 'Добавить' }}
+          </button>
+        </div>
+        <p class="muted" v-if="customOptionHint.triggers">{{ customOptionHint.triggers }}</p>
+        <p class="error" v-if="customOptionError.triggers">{{ customOptionError.triggers }}</p>
+        <div class="chip-grid" v-if="customOptions('triggers').length > 0">
+          <label
+            v-for="item in customOptions('triggers')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.triggers.includes(item) }"
+          >
+            <input type="checkbox" :value="item" v-model="form.triggers" />
+            <span>{{ optionLabel('triggers', item) }}</span>
+            <small class="chip-note">{{ statusLabel(customStatus('triggers', item)) }}</small>
           </label>
         </div>
       </fieldset>
@@ -51,9 +83,40 @@
       <fieldset>
         <legend>Характер боли</legend>
         <div class="chip-grid">
-          <label v-for="item in options.pain_types" :key="item" class="chip">
+          <label
+            v-for="item in standardOptions('pain_types')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.pain_types.includes(item) }"
+          >
             <input type="checkbox" :value="item" v-model="form.pain_types" />
-            <span>{{ item }}</span>
+            <span>{{ optionLabel('pain_types', item) }}</span>
+          </label>
+        </div>
+        <div class="custom-inline-add">
+          <input
+            v-model="customOptionDraft.pain_types"
+            type="text"
+            maxlength="80"
+            placeholder="Добавить свой вариант"
+            @keydown.enter.prevent="addCustomOption('pain_types')"
+          />
+          <button type="button" class="btn" :disabled="customOptionLoading.pain_types" @click="addCustomOption('pain_types')">
+            {{ customOptionLoading.pain_types ? 'Добавляем...' : 'Добавить' }}
+          </button>
+        </div>
+        <p class="muted" v-if="customOptionHint.pain_types">{{ customOptionHint.pain_types }}</p>
+        <p class="error" v-if="customOptionError.pain_types">{{ customOptionError.pain_types }}</p>
+        <div class="chip-grid" v-if="customOptions('pain_types').length > 0">
+          <label
+            v-for="item in customOptions('pain_types')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.pain_types.includes(item) }"
+          >
+            <input type="checkbox" :value="item" v-model="form.pain_types" />
+            <span>{{ optionLabel('pain_types', item) }}</span>
+            <small class="chip-note">{{ statusLabel(customStatus('pain_types', item)) }}</small>
           </label>
         </div>
       </fieldset>
@@ -61,9 +124,40 @@
       <fieldset>
         <legend>Локализация</legend>
         <div class="chip-grid">
-          <label v-for="item in options.localizations" :key="item" class="chip">
+          <label
+            v-for="item in standardOptions('localizations')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.localizations.includes(item) }"
+          >
             <input type="checkbox" :value="item" v-model="form.localizations" />
-            <span>{{ item }}</span>
+            <span>{{ optionLabel('localizations', item) }}</span>
+          </label>
+        </div>
+        <div class="custom-inline-add">
+          <input
+            v-model="customOptionDraft.localizations"
+            type="text"
+            maxlength="80"
+            placeholder="Добавить свой вариант"
+            @keydown.enter.prevent="addCustomOption('localizations')"
+          />
+          <button type="button" class="btn" :disabled="customOptionLoading.localizations" @click="addCustomOption('localizations')">
+            {{ customOptionLoading.localizations ? 'Добавляем...' : 'Добавить' }}
+          </button>
+        </div>
+        <p class="muted" v-if="customOptionHint.localizations">{{ customOptionHint.localizations }}</p>
+        <p class="error" v-if="customOptionError.localizations">{{ customOptionError.localizations }}</p>
+        <div class="chip-grid" v-if="customOptions('localizations').length > 0">
+          <label
+            v-for="item in customOptions('localizations')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.localizations.includes(item) }"
+          >
+            <input type="checkbox" :value="item" v-model="form.localizations" />
+            <span>{{ optionLabel('localizations', item) }}</span>
+            <small class="chip-note">{{ statusLabel(customStatus('localizations', item)) }}</small>
           </label>
         </div>
       </fieldset>
@@ -71,9 +165,40 @@
       <fieldset>
         <legend>Симптомы</legend>
         <div class="chip-grid">
-          <label v-for="item in options.symptoms" :key="item" class="chip">
+          <label
+            v-for="item in standardOptions('symptoms')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.symptoms.includes(item) }"
+          >
             <input type="checkbox" :value="item" v-model="form.symptoms" />
-            <span>{{ item }}</span>
+            <span>{{ optionLabel('symptoms', item) }}</span>
+          </label>
+        </div>
+        <div class="custom-inline-add">
+          <input
+            v-model="customOptionDraft.symptoms"
+            type="text"
+            maxlength="80"
+            placeholder="Добавить свой вариант"
+            @keydown.enter.prevent="addCustomOption('symptoms')"
+          />
+          <button type="button" class="btn" :disabled="customOptionLoading.symptoms" @click="addCustomOption('symptoms')">
+            {{ customOptionLoading.symptoms ? 'Добавляем...' : 'Добавить' }}
+          </button>
+        </div>
+        <p class="muted" v-if="customOptionHint.symptoms">{{ customOptionHint.symptoms }}</p>
+        <p class="error" v-if="customOptionError.symptoms">{{ customOptionError.symptoms }}</p>
+        <div class="chip-grid" v-if="customOptions('symptoms').length > 0">
+          <label
+            v-for="item in customOptions('symptoms')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.symptoms.includes(item) }"
+          >
+            <input type="checkbox" :value="item" v-model="form.symptoms" />
+            <span>{{ optionLabel('symptoms', item) }}</span>
+            <small class="chip-note">{{ statusLabel(customStatus('symptoms', item)) }}</small>
           </label>
         </div>
       </fieldset>
@@ -81,9 +206,40 @@
       <fieldset>
         <legend>Аура</legend>
         <div class="chip-grid">
-          <label v-for="item in options.auras" :key="item" class="chip">
+          <label
+            v-for="item in standardOptions('auras')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.auras.includes(item) }"
+          >
             <input type="checkbox" :value="item" v-model="form.auras" />
-            <span>{{ item }}</span>
+            <span>{{ optionLabel('auras', item) }}</span>
+          </label>
+        </div>
+        <div class="custom-inline-add">
+          <input
+            v-model="customOptionDraft.auras"
+            type="text"
+            maxlength="80"
+            placeholder="Добавить свой вариант"
+            @keydown.enter.prevent="addCustomOption('auras')"
+          />
+          <button type="button" class="btn" :disabled="customOptionLoading.auras" @click="addCustomOption('auras')">
+            {{ customOptionLoading.auras ? 'Добавляем...' : 'Добавить' }}
+          </button>
+        </div>
+        <p class="muted" v-if="customOptionHint.auras">{{ customOptionHint.auras }}</p>
+        <p class="error" v-if="customOptionError.auras">{{ customOptionError.auras }}</p>
+        <div class="chip-grid" v-if="customOptions('auras').length > 0">
+          <label
+            v-for="item in customOptions('auras')"
+            :key="item"
+            class="chip"
+            :class="{ selected: form.auras.includes(item) }"
+          >
+            <input type="checkbox" :value="item" v-model="form.auras" />
+            <span>{{ optionLabel('auras', item) }}</span>
+            <small class="chip-note">{{ statusLabel(customStatus('auras', item)) }}</small>
           </label>
         </div>
       </fieldset>
@@ -114,6 +270,7 @@ const options = reactive({
   localizations: [],
   symptoms: [],
   auras: [],
+  labels: {},
 });
 
 const form = reactive({
@@ -145,9 +302,51 @@ const reliefSelect = computed({
 
 const loading = ref(false);
 const errorMessage = ref('');
+const customOptionDraft = reactive({
+  triggers: '',
+  pain_types: '',
+  localizations: '',
+  symptoms: '',
+  auras: '',
+});
+const customOptionError = reactive({
+  triggers: '',
+  pain_types: '',
+  localizations: '',
+  symptoms: '',
+  auras: '',
+});
+const customOptionHint = reactive({
+  triggers: 'Можно добавить свой вариант в эту группу.',
+  pain_types: 'Можно добавить свой вариант в эту группу.',
+  localizations: 'Можно добавить свой вариант в эту группу.',
+  symptoms: 'Можно добавить свой вариант в эту группу.',
+  auras: 'Можно добавить свой вариант в эту группу.',
+});
+const customOptionLoading = reactive({
+  triggers: false,
+  pain_types: false,
+  localizations: false,
+  symptoms: false,
+  auras: false,
+});
+const customOptionStatusByCategory = reactive({
+  triggers: {},
+  pain_types: {},
+  localizations: {},
+  symptoms: {},
+  auras: {},
+});
 
 onMounted(async () => {
   await loadOptions();
+  try {
+    await loadCustomOptionStatuses();
+  } catch {
+    for (const key of Object.keys(customOptionHint)) {
+      customOptionHint[key] = 'Не удалось загрузить статусы модерации. Попробуй обновить страницу позже.';
+    }
+  }
 
   if (isEdit.value) {
     await loadAttackForEdit();
@@ -198,6 +397,71 @@ function applyInitialStartFromCalendarClick() {
 
   form.start_at = toInputDateTime(start);
   form.end_at = '';
+}
+
+function optionLabel(group, key) {
+  return options.labels?.[group]?.[key] ?? key;
+}
+
+function standardOptions(category) {
+  return (options[category] ?? []).filter((item) => !String(item).startsWith('custom:'));
+}
+
+function customOptions(category) {
+  return (options[category] ?? []).filter((item) => String(item).startsWith('custom:'));
+}
+
+function customStatus(category, key) {
+  return customOptionStatusByCategory[category]?.[key] ?? null;
+}
+
+async function addCustomOption(category) {
+  customOptionError[category] = '';
+  const name = String(customOptionDraft[category] ?? '').trim();
+  if (name.length < 2) {
+    customOptionError[category] = 'Минимум 2 символа';
+    return;
+  }
+
+  customOptionLoading[category] = true;
+  try {
+    await apiRequest('/custom-options', {
+      method: 'POST',
+      body: { category, name },
+    });
+    customOptionDraft[category] = '';
+    customOptionHint[category] = 'Значение добавлено. Можно сразу выбрать.';
+    await loadOptions();
+    await loadCustomOptionStatuses();
+  } catch (error) {
+    if (error?.status === 429) {
+      customOptionError[category] = 'Слишком много новых значений. Лимит: 10 в день.';
+    } else {
+      customOptionError[category] = error?.payload?.error || 'Не удалось добавить значение';
+    }
+  } finally {
+    customOptionLoading[category] = false;
+  }
+}
+
+async function loadCustomOptionStatuses() {
+  for (const category of Object.keys(customOptionStatusByCategory)) {
+    Object.keys(customOptionStatusByCategory[category]).forEach((key) => {
+      delete customOptionStatusByCategory[category][key];
+    });
+  }
+
+  const items = await apiRequest('/custom-options');
+  for (const item of items) {
+    if (!customOptionStatusByCategory[item.category]) continue;
+    customOptionStatusByCategory[item.category][`custom:${item.id}`] = item.status;
+  }
+}
+
+function statusLabel(status) {
+  if (status === 'approved') return 'подтвержден';
+  if (status === 'rejected') return 'отклонен';
+  return 'на проверке';
 }
 
 function fillForm(data) {
@@ -274,7 +538,11 @@ async function save() {
 
     await router.push('/calendar');
   } catch (error) {
-    errorMessage.value = error?.payload?.error || 'Ошибка сохранения';
+    if (error?.status === 429) {
+      errorMessage.value = 'Слишком много операций. Попробуй позже.';
+    } else {
+      errorMessage.value = error?.payload?.error || 'Ошибка сохранения';
+    }
   } finally {
     loading.value = false;
   }
@@ -283,8 +551,16 @@ async function save() {
 async function removeAttack() {
   if (!confirm('Удалить приступ?')) return;
 
-  await apiRequest(`/attacks/${route.params.id}`, { method: 'DELETE' });
-  await router.push('/calendar');
+  try {
+    await apiRequest(`/attacks/${route.params.id}`, { method: 'DELETE' });
+    await router.push('/calendar');
+  } catch (error) {
+    if (error?.status === 429) {
+      errorMessage.value = 'Слишком много операций. Попробуй позже.';
+    } else {
+      errorMessage.value = error?.payload?.error || 'Ошибка удаления';
+    }
+  }
 }
 
 function backToCalendar() {

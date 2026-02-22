@@ -7,12 +7,17 @@
 - Auth (session cookie): `login/logout/me`
 - Attacks API: `last`, список по интервалу, CRUD
 - Meta API: словари для формы
+- Пользовательские триггеры:
+  - пользователь может добавить свой триггер (автоотправка на модерацию)
+  - rate limit: не более `10` новых триггеров в день и `2` в минуту на пользователя
+- Админ-модерация пользовательских триггеров (`/admin/triggers`)
 - Vue SPA маршруты:
   - `/login`
   - `/calendar`
   - `/attacks/new`
   - `/attacks/:id/edit`
   - `/graphs` (заглушка)
+  - `/admin/triggers` (для админа)
 - Календарь 6x7 с сегментами приступов по времени и интенсивности
 - Создание/редактирование приступа, автоподстановка из последнего приступа
 
@@ -26,6 +31,10 @@ docker compose up --build -d
 ## Demo account
 - email: `demo@example.com`
 - password: `password`
+
+## Admin account
+- email: `admin@example.com`
+- password: `admin12345`
 
 ## Сборка фронтенда
 Если меняешь Vue-код, собери ассеты:

@@ -27,6 +27,9 @@ services:
       DEFAULT_USER_NAME: Demo User
       DEFAULT_USER_EMAIL: demo@example.com
       DEFAULT_USER_PASSWORD: password
+      ADMIN_USER_NAME: Admin
+      ADMIN_USER_EMAIL: admin@example.com
+      ADMIN_USER_PASSWORD: admin12345
     depends_on:
       postgres:
         condition: service_healthy

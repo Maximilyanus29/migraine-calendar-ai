@@ -1,37 +1,46 @@
 <template>
-  <section class="card calendar-card">
+  <section
+    class="card calendar-card"
+    @touchstart="onTouchStart"
+    @touchend="onTouchEnd"
+    @wheel.prevent="onWheel"
+  >
     <div class="calendar-head">
       <button class="btn" @click="changeMonth(-1)">←</button>
       <h1>{{ monthLabel }}</h1>
-      <button class="btn" @click="changeMonth(1)">→</button>
+      <button class="btn" :disabled="!canGoNextMonth" @click="changeMonth(1)">→</button>
     </div>
 
-    <div class="weekday-row">
-      <div v-for="day in weekdayNames" :key="day" class="weekday">{{ day }}</div>
-    </div>
-
-    <div class="calendar-grid">
-      <div
-        v-for="day in gridDays"
-        :key="day.key"
-        class="day-cell"
-        :class="{ 'outside': !day.inMonth, 'today': day.isToday }"
-        @click="onDayClick(day, $event)"
-      >
-        <div class="segments">
-          <RouterLink
-            v-for="segment in segmentsByDay[day.key] || []"
-            :key="segment.attack_id"
-            class="segment"
-            :to="`/attacks/${segment.attack_id}/edit`"
-            :style="segmentStyle(segment)"
-            :title="segment.title"
-            @click.stop
-          />
+    <Transition :name="transitionName" mode="out-in">
+      <div :key="monthKey" class="calendar-body">
+        <div class="weekday-row">
+          <div v-for="day in weekdayNames" :key="day" class="weekday">{{ day }}</div>
         </div>
-        <div class="day-number">{{ day.date.getDate() }}</div>
+
+        <div class="calendar-grid">
+          <div
+            v-for="day in gridDays"
+            :key="day.key"
+            class="day-cell"
+            :class="{ 'outside': !day.inMonth, 'today': day.isToday }"
+            @click="onDayClick(day, $event)"
+          >
+            <div class="segments">
+              <RouterLink
+                v-for="segment in segmentsByDay[day.key] || []"
+                :key="segment.attack_id"
+                class="segment"
+                :to="`/attacks/${segment.attack_id}/edit`"
+                :style="segmentStyle(segment)"
+                :title="segment.title"
+                @click.stop
+              />
+            </div>
+            <div class="day-number">{{ day.date.getDate() }}</div>
+          </div>
+        </div>
       </div>
-    </div>
+    </Transition>
   </section>
 </template>
 
@@ -44,11 +53,23 @@ const router = useRouter();
 const now = new Date();
 const currentMonth = ref(new Date(now.getFullYear(), now.getMonth(), 1));
 const attacks = ref([]);
+const touchStartX = ref(null);
+const touchStartY = ref(null);
+const transitionName = ref('month-next');
+const wheelDeltaSum = ref(0);
+const wheelLockedUntil = ref(0);
 
 const weekdayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 const monthLabel = computed(() =>
   currentMonth.value.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
+);
+const canGoNextMonth = computed(() => {
+  const todayMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  return currentMonth.value.getTime() < todayMonth.getTime();
+});
+const monthKey = computed(
+  () => `${currentMonth.value.getFullYear()}-${String(currentMonth.value.getMonth() + 1).padStart(2, '0')}`
 );
 
 const gridDays = computed(() => buildMonthGrid(currentMonth.value));
@@ -115,7 +136,80 @@ function intensityColor(intensity) {
 }
 
 function changeMonth(delta) {
+  if (delta > 0 && !canGoNextMonth.value) {
+    return;
+  }
+  transitionName.value = delta >= 0 ? 'month-next' : 'month-prev';
   currentMonth.value = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + delta, 1);
+}
+
+function onTouchStart(event) {
+  if (isLandscapeTouchDevice()) {
+    touchStartX.value = null;
+    touchStartY.value = null;
+    return;
+  }
+
+  const touch = event.changedTouches?.[0];
+  if (!touch) return;
+  touchStartX.value = touch.clientX;
+  touchStartY.value = touch.clientY;
+}
+
+function onTouchEnd(event) {
+  if (isLandscapeTouchDevice()) {
+    return;
+  }
+
+  const touch = event.changedTouches?.[0];
+  if (!touch || touchStartX.value === null || touchStartY.value === null) {
+    return;
+  }
+
+  const deltaX = touch.clientX - touchStartX.value;
+  const deltaY = touch.clientY - touchStartY.value;
+  touchStartX.value = null;
+  touchStartY.value = null;
+
+  if (Math.abs(deltaY) < 40 || Math.abs(deltaY) < Math.abs(deltaX)) {
+    return;
+  }
+
+  if (deltaY < 0) {
+    changeMonth(1);
+  } else {
+    changeMonth(-1);
+  }
+}
+
+function onWheel(event) {
+  if (!window.matchMedia('(pointer: fine)').matches) {
+    return;
+  }
+
+  if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) {
+    return;
+  }
+
+  const nowMs = Date.now();
+  if (nowMs < wheelLockedUntil.value) {
+    return;
+  }
+
+  wheelDeltaSum.value += event.deltaY;
+  if (Math.abs(wheelDeltaSum.value) < 42) {
+    return;
+  }
+
+  const direction = wheelDeltaSum.value > 0 ? 1 : -1;
+  wheelDeltaSum.value = 0;
+
+  changeMonth(direction);
+  wheelLockedUntil.value = nowMs + 260;
+}
+
+function isLandscapeTouchDevice() {
+  return window.matchMedia('(pointer: coarse) and (orientation: landscape)').matches;
 }
 
 async function loadAttacks() {

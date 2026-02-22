@@ -24,6 +24,10 @@ router.beforeEach(async (to) => {
     return '/login';
   }
 
+  if (to.meta.requiresAdmin && !auth.user?.is_admin) {
+    return '/calendar';
+  }
+
   return true;
 });
 

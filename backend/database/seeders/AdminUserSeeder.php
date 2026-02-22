@@ -6,13 +6,13 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class DemoUserSeeder extends Seeder
+class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $name = env('DEFAULT_USER_NAME', 'Demo User');
-        $email = env('DEFAULT_USER_EMAIL', 'demo@example.com');
-        $password = env('DEFAULT_USER_PASSWORD', 'password');
+        $name = env('ADMIN_USER_NAME', 'Admin');
+        $email = env('ADMIN_USER_EMAIL', 'admin@example.com');
+        $password = env('ADMIN_USER_PASSWORD', 'admin12345');
 
         User::query()->updateOrCreate(
             ['email' => $email],
@@ -20,8 +20,9 @@ class DemoUserSeeder extends Seeder
                 'name' => $name,
                 'password' => Hash::make($password),
                 'timezone' => env('APP_TIMEZONE', 'Europe/Moscow'),
-                'is_admin' => false,
+                'is_admin' => true,
             ]
         );
     }
 }
+

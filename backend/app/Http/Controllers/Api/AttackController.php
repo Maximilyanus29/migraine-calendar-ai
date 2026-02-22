@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attack;
+use App\Models\CustomTrigger;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class AttackController extends Controller
@@ -62,7 +64,7 @@ class AttackController extends Controller
             return $this->unauthorized();
         }
 
-        $data = $this->validatedPayload($request);
+        $data = $this->validatedPayload($request, $userId);
         $data['user_id'] = $userId;
 
         $attack = Attack::create($data);
@@ -95,7 +97,7 @@ class AttackController extends Controller
             return response()->json(['error' => 'Attack not found', 'details' => []], 404);
         }
 
-        $attack->update($this->validatedPayload($request));
+        $attack->update($this->validatedPayload($request, $userId));
 
         return response()->json(['data' => $attack->fresh()]);
     }
@@ -116,9 +118,13 @@ class AttackController extends Controller
         return response()->json(['data' => ['deleted' => true]]);
     }
 
-    private function validatedPayload(Request $request): array
+    private function validatedPayload(Request $request, int $userId): array
     {
-        $options = config('migraine.options', []);
+        $allowedTriggers = $this->allowedCategoryValues('triggers', $userId);
+        $allowedPainTypes = $this->allowedCategoryValues('pain_types', $userId);
+        $allowedLocalizations = $this->allowedCategoryValues('localizations', $userId);
+        $allowedSymptoms = $this->allowedCategoryValues('symptoms', $userId);
+        $allowedAuras = $this->allowedCategoryValues('auras', $userId);
 
         $validated = $request->validate([
             'start_at' => ['required', 'date', 'before_or_equal:now'],
@@ -127,15 +133,15 @@ class AttackController extends Controller
             'medications' => ['nullable', 'string'],
             'relief' => ['nullable', 'boolean'],
             'pain_types' => ['sometimes', 'array'],
-            'pain_types.*' => ['string', Rule::in($options['pain_types'] ?? [])],
+            'pain_types.*' => ['string', Rule::in($allowedPainTypes)],
             'localizations' => ['sometimes', 'array'],
-            'localizations.*' => ['string', Rule::in($options['localizations'] ?? [])],
+            'localizations.*' => ['string', Rule::in($allowedLocalizations)],
             'triggers' => ['sometimes', 'array'],
-            'triggers.*' => ['string', Rule::in($options['triggers'] ?? [])],
+            'triggers.*' => ['string', Rule::in($allowedTriggers)],
             'symptoms' => ['sometimes', 'array'],
-            'symptoms.*' => ['string', Rule::in($options['symptoms'] ?? [])],
+            'symptoms.*' => ['string', Rule::in($allowedSymptoms)],
             'auras' => ['sometimes', 'array'],
-            'auras.*' => ['string', Rule::in($options['auras'] ?? [])],
+            'auras.*' => ['string', Rule::in($allowedAuras)],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -144,6 +150,23 @@ class AttackController extends Controller
         }
 
         return $validated;
+    }
+
+    private function allowedCategoryValues(string $category, int $userId): array
+    {
+        $base = array_values(config('migraine.options.' . $category, []));
+        if (!Schema::hasTable('custom_triggers')) {
+            return $base;
+        }
+
+        $custom = CustomTrigger::query()
+            ->where('user_id', $userId)
+            ->where('category', $category)
+            ->pluck('id')
+            ->map(static fn (int $id): string => 'custom:' . $id)
+            ->all();
+
+        return array_values(array_unique(array_merge($base, $custom)));
     }
 
     private function authUserId(): ?int

@@ -34,6 +34,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'timezone' => $user->timezone,
+                'is_admin' => (bool) $user->is_admin,
             ],
         ], 201);
     }
@@ -60,6 +61,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'timezone' => $user->timezone,
+                'is_admin' => (bool) $user->is_admin,
             ],
         ]);
     }
@@ -89,6 +91,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'timezone' => $user->timezone,
+                'is_admin' => (bool) $user->is_admin,
             ],
         ]);
     }
