@@ -22,7 +22,7 @@ class CustomTriggerController extends Controller
             return $this->unauthorized();
         }
 
-        if (!Schema::hasTable('custom_triggers')) {
+        if (! Schema::hasTable('custom_triggers')) {
             return response()->json(['data' => []]);
         }
 
@@ -47,7 +47,7 @@ class CustomTriggerController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:80', 'regex:/^[\p{L}\p{N}\s\-().,]+$/u'],
         ]);
 
-        if (!Schema::hasTable('custom_triggers')) {
+        if (! Schema::hasTable('custom_triggers')) {
             return response()->json(['error' => 'Сначала обнови базу данных (migrate)', 'details' => []], 409);
         }
 
@@ -60,8 +60,8 @@ class CustomTriggerController extends Controller
         }
 
         $reserved = array_map(
-            static fn (string $value): string => mb_strtolower((string) ($value ?? '')),
-            config('migraine.options.labels.' . $category, [])
+            static fn (string $value): string => mb_strtolower((string) $value),
+            config('migraine.options.labels.'.$category, [])
         );
 
         if (in_array($normalized, $reserved, true)) {
@@ -96,7 +96,7 @@ class CustomTriggerController extends Controller
             return $this->forbidden();
         }
 
-        if (!Schema::hasTable('custom_triggers')) {
+        if (! Schema::hasTable('custom_triggers')) {
             return response()->json(['data' => []]);
         }
 
@@ -120,12 +120,22 @@ class CustomTriggerController extends Controller
             $query->where('category', $validatedCategory['category']);
         }
 
+        /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\CustomTrigger> $items */
         $items = $query->get();
         $usageByTrigger = $this->usageStatsByTriggerId();
 
         return response()->json([
             'data' => $items->map(function (CustomTrigger $trigger) use ($usageByTrigger): array {
                 $usage = $usageByTrigger[$trigger->id] ?? ['usage_count' => 0, 'unique_users_count' => 0];
+                $owner = $trigger->user;
+                $ownerId = null;
+                $ownerEmail = null;
+                $ownerName = null;
+                if ($owner instanceof \App\Models\User) {
+                    $ownerId = $owner->id;
+                    $ownerEmail = $owner->email;
+                    $ownerName = $owner->name;
+                }
 
                 return [
                     'id' => $trigger->id,
@@ -137,9 +147,9 @@ class CustomTriggerController extends Controller
                     'usage_count' => (int) $usage['usage_count'],
                     'unique_users_count' => (int) $usage['unique_users_count'],
                     'user' => [
-                        'id' => $trigger->user?->id,
-                        'email' => $trigger->user?->email,
-                        'name' => $trigger->user?->name,
+                        'id' => $ownerId,
+                        'email' => $ownerEmail,
+                        'name' => $ownerName,
                     ],
                 ];
             })->values(),
@@ -177,13 +187,14 @@ class CustomTriggerController extends Controller
     private function authUserId(): ?int
     {
         $id = Auth::id();
+
         return is_int($id) ? $id : null;
     }
 
     private function authAdmin(): ?\App\Models\User
     {
         $user = Auth::user();
-        if (!$user instanceof \App\Models\User || !$user->is_admin) {
+        if (! $user instanceof \App\Models\User || ! $user->is_admin) {
             return null;
         }
 
@@ -202,7 +213,7 @@ class CustomTriggerController extends Controller
 
     private function usageStatsByTriggerId(): array
     {
-        if (!Schema::hasTable('attacks') || !Schema::hasTable('custom_triggers')) {
+        if (! Schema::hasTable('attacks') || ! Schema::hasTable('custom_triggers')) {
             return [];
         }
 

@@ -154,8 +154,8 @@ class AttackController extends Controller
 
     private function allowedCategoryValues(string $category, int $userId): array
     {
-        $base = array_values(config('migraine.options.' . $category, []));
-        if (!Schema::hasTable('custom_triggers')) {
+        $base = array_values(config('migraine.options.'.$category, []));
+        if (! Schema::hasTable('custom_triggers')) {
             return $base;
         }
 
@@ -163,7 +163,7 @@ class AttackController extends Controller
             ->where('user_id', $userId)
             ->where('category', $category)
             ->pluck('id')
-            ->map(static fn (int $id): string => 'custom:' . $id)
+            ->map(static fn (int $id): string => 'custom:'.$id)
             ->all();
 
         return array_values(array_unique(array_merge($base, $custom)));
@@ -172,6 +172,7 @@ class AttackController extends Controller
     private function authUserId(): ?int
     {
         $id = Auth::id();
+
         return is_int($id) ? $id : null;
     }
 

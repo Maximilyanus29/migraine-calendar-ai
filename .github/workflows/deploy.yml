@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy via SSH
+        id: deploy_step
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          script: |
+            cd /opt/migraine-calendar-ai
+            chmod +x pull.sh rollback.sh smoke.sh smoke-admin.sh
+            APP_URL=${{ secrets.APP_URL }} RUN_SMOKE=1 RUN_SMOKE_ADMIN=0 ./pull.sh
+
+      - name: Rollback on failure
+        if: steps.deploy_step.outcome == 'failure'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          script: |
+            cd /opt/migraine-calendar-ai
+            chmod +x rollback.sh
+            APP_URL=${{ secrets.APP_URL }} RUN_SMOKE=1 RUN_SMOKE_ADMIN=0 ./rollback.sh
+
+      - name: Fail workflow if deploy failed
+        if: steps.deploy_step.outcome == 'failure'
+        run: exit 1

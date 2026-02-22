@@ -23,7 +23,9 @@ return new class extends Migration
             $table->index(['status', 'created_at']);
         });
 
-        DB::statement("ALTER TABLE custom_triggers ADD CONSTRAINT custom_triggers_status_check CHECK (status IN ('pending', 'approved', 'rejected'))");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE custom_triggers ADD CONSTRAINT custom_triggers_status_check CHECK (status IN ('pending', 'approved', 'rejected'))");
+        }
     }
 
     public function down(): void
@@ -31,4 +33,3 @@ return new class extends Migration
         Schema::dropIfExists('custom_triggers');
     }
 };
-

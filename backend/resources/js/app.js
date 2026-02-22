@@ -33,3 +33,34 @@ router.beforeEach(async (to) => {
 
 app.use(router);
 app.mount('#app');
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const buildHash =
+      document.querySelector('meta[name="app-build-hash"]')?.getAttribute('content') || 'dev';
+    navigator.serviceWorker.register(`/sw.js?build=${encodeURIComponent(buildHash)}`)
+      .then((registration) => {
+        const notifyUpdate = () => {
+          window.dispatchEvent(new CustomEvent('sw-update-available'));
+        };
+
+        if (registration.waiting) {
+          notifyUpdate();
+        }
+
+        registration.addEventListener('updatefound', () => {
+          const installing = registration.installing;
+          if (!installing) return;
+
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              notifyUpdate();
+            }
+          });
+        });
+      })
+      .catch(() => {
+        // no-op: app must continue to work even if SW registration fails
+      });
+  });
+}

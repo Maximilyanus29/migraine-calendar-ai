@@ -55,6 +55,67 @@ docker run --rm -u $(id -u):$(id -g) \
   node:22-alpine sh -lc "npm run build"
 ```
 
+## Smoke тесты после деплоя
+Быстрая проверка основных сценариев API:
+```bash
+APP_URL=http://localhost:8081 ./smoke.sh
+```
+
+Проверка сценария модерации (approve/reject):
+```bash
+APP_URL=http://localhost:8081 ./smoke-admin.sh
+```
+
+В `pull.sh` smoke-проверки запускаются автоматически.
+Отключить можно так:
+```bash
+RUN_SMOKE=0 ./pull.sh
+```
+
+Включить admin smoke прямо в деплой:
+```bash
+RUN_SMOKE_ADMIN=1 ./pull.sh
+```
+
+## Откат (Rollback)
+Быстрый откат к предыдущему успешному релизу:
+```bash
+./rollback.sh
+```
+
+Откат к конкретному коммиту/тегу:
+```bash
+./rollback.sh <commit_or_tag>
+```
+
+Скрипт использует `pull.sh` с `DEPLOY_REF`, делает сборку, миграции и smoke-проверки.
+
+## PWA
+Добавлен базовый PWA:
+- `backend/public/manifest.webmanifest`
+- `backend/public/sw.js`
+- иконки в `backend/public/icons/`
+
+Service worker регистрируется только в production (`resources/js/app.js`).
+Кэшируются только статика и SPA shell; API (`/api/*`) не кэшируется сервис-воркером.
+
+## CI/CD (GitHub Actions)
+Добавлены workflow:
+- `.github/workflows/ci.yml`:
+  - backend: `pint`, `phpstan`, `phpunit` (с PostgreSQL service)
+  - frontend: `eslint`, `vite build`
+  - shell: `shellcheck` для `pull.sh`, `smoke.sh`, `smoke-admin.sh`
+- `.github/workflows/deploy.yml`:
+  - деплой по SSH на `main` и вручную (`workflow_dispatch`)
+  - запускает `./pull.sh` на сервере
+
+Нужные GitHub Secrets для деплоя:
+- `SSH_HOST`
+- `SSH_USER`
+- `SSH_KEY`
+- `SSH_PORT`
+- `APP_URL` (например `https://your-domain.com`)
+
 ## Быстрая проверка API
 ```bash
 curl -i -c cookie.txt -X POST http://localhost:8081/api/v1/auth/login \

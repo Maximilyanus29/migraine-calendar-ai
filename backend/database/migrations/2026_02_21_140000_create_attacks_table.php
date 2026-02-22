@@ -28,8 +28,10 @@ return new class extends Migration
             $table->index('user_id');
         });
 
-        DB::statement('ALTER TABLE attacks ADD CONSTRAINT attacks_end_after_start CHECK (end_at > start_at)');
-        DB::statement('ALTER TABLE attacks ADD CONSTRAINT attacks_intensity_range CHECK (intensity >= 1 AND intensity <= 10)');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE attacks ADD CONSTRAINT attacks_end_after_start CHECK (end_at > start_at)');
+            DB::statement('ALTER TABLE attacks ADD CONSTRAINT attacks_intensity_range CHECK (intensity >= 1 AND intensity <= 10)');
+        }
     }
 
     public function down(): void

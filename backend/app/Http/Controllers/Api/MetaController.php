@@ -14,7 +14,7 @@ class MetaController extends Controller
 
     public function options(): JsonResponse
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json(['error' => 'Unauthorized', 'details' => []], 401);
         }
 
@@ -40,11 +40,11 @@ class MetaController extends Controller
 
         foreach ($customTriggers as $item) {
             $category = (string) $item->category;
-            if (!in_array($category, self::CATEGORIES, true)) {
+            if (! in_array($category, self::CATEGORIES, true)) {
                 continue;
             }
 
-            $key = 'custom:' . $item->id;
+            $key = 'custom:'.$item->id;
             $options[$category][] = $key;
             $labels[$category][$key] = $item->name;
         }
