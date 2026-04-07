@@ -41,18 +41,18 @@ docker compose up --build -d
 ```bash
 docker run --rm -u $(id -u):$(id -g) \
   -v /home/max/php/migraine-ai/backend:/app -w /app \
-  node:22-alpine sh -lc "npm run build"
+  public.ecr.aws/docker/library/node:22-alpine sh -lc "npm run build"
 ```
 
 ```bash
 
 docker run --rm -u $(id -u):$(id -g) \
   -v /opt/migraine-calendar-ai/backend:/app -w /app \
-  node:22-alpine sh -lc "npm install"
+  public.ecr.aws/docker/library/node:22-alpine sh -lc "npm install"
 
 docker run --rm -u $(id -u):$(id -g) \
   -v /opt/migraine-calendar-ai/backend:/app -w /app \
-  node:22-alpine sh -lc "npm run build"
+  public.ecr.aws/docker/library/node:22-alpine sh -lc "npm run build"
 ```
 
 ## Smoke тесты после деплоя

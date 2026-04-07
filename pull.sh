@@ -32,7 +32,7 @@ POST_DEPLOY_SHA="$(git rev-parse HEAD)"
 echo "[deploy] Building frontend assets..."
 docker run --rm -u "$(id -u):$(id -g)" \
   -v "$APP_DIR/backend:/app" -w /app \
-  node:22-alpine sh -lc "npm ci && npm run build"
+  public.ecr.aws/docker/library/node:22-alpine sh -lc "npm ci && npm run build"
 
 echo "[deploy] Restarting services..."
 docker compose up --build -d

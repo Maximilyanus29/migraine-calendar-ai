@@ -45,8 +45,16 @@ sudo usermod -aG docker "$USER"
 sudo mkdir -p /opt/migraine-calendar-ai
 sudo chown "$USER:$USER" /opt/migraine-calendar-ai
 cd /opt/migraine-calendar-ai
-git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ> .
+git clone https://github.com/Maximilyanus29/migraine-calendar-ai.git .
 ```
+
+Проверка: в этом каталоге должен лежать **`docker-compose.yml`** рядом с `pull.sh`:
+
+```bash
+ls -la docker-compose.yml pull.sh
+```
+
+Если вы уже клонировали **без** точки, проект в подкаталоге (например `migraine-calendar-ai/`): либо всегда делайте `cd /opt/migraine-calendar-ai/migraine-calendar-ai` перед `docker compose`, либо перенесите содержимое на уровень выше и обновите пути в `pull.sh` / деплое.
 
 Создайте `backend/.env` на сервере (не коммитьте):
 
@@ -57,7 +65,9 @@ nano backend/.env   # или vim
 
 Обязательно задайте хотя бы:
 
-- `APP_KEY` — сгенерировать: `docker compose run --rm php php artisan key:generate --show` (или локально `php artisan key:generate`), вставить в `.env`
+- `APP_KEY` — сгенерировать **из корня репозитория** (где `docker-compose.yml`):  
+  `docker compose run --rm php php artisan key:generate --show`  
+  (если контейнеры ещё не поднимались, сначала `docker compose up -d postgres` и дождаться healthy, затем снова команду с `key:generate`; или сгенерируйте ключ локально `php artisan key:generate --show`)
 - `APP_ENV=production`, `APP_DEBUG=false`
 - `APP_URL=https://ваш-домен.ru` (или `http://IP` на время проверки)
 - `DB_*` — как в `docker-compose.yml` (по умолчанию `postgres`, `migraine` / пользователь / пароль), **в продакшене смените пароль БД** в compose и в `.env`.
@@ -68,7 +78,8 @@ nano backend/.env   # или vim
 cd /opt/migraine-calendar-ai
 docker compose up --build -d
 docker compose exec -T php php artisan migrate --force
-docker compose exec -T php php artisan db:seed --force   # один раз, демо/админ
+docker compose exec -T php php artisan db:seed --force  
+ # один раз, демо/админ
 ```
 
 Проверка: `curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1/up` → `200`.
@@ -151,3 +162,29 @@ HTTPS: на VPS часто ставят **Caddy** или **certbot** на хос
 ## 8. Почему «по ключу ты не подключишься» из чата
 
 Среда разработки агента **не имеет** вашего `~/.ssh/id_ed25519` и не должна хранить секреты. Деплой делают: **GitHub Actions** (секреты) или **ваш терминал** после `ssh -i ... user@host`.
+
+## 9. Лимит Docker Hub (`unauthenticated pull rate limit`)
+
+Анонимные скачивания с **docker.io** быстро упираются в квоту. В проекте образы указаны через **AWS Public ECR** (`public.ecr.aws/docker/library/...`) — отдельный логин не нужен.
+
+Если всё же тянете что-то с Docker Hub — выполните `docker login` (бесплатный аккаунт на hub.docker.com), лимит выше.
+
+После обновления репозитория с образами из ECR, из корня проекта:
+
+```bash
+docker compose pull
+docker compose up --build -d
+docker compose exec -T php php artisan migrate --force
+# db:seed только при первом развёртывании или осознанно
+docker compose exec -T php php artisan db:seed --force
+```
+
+## 10. Ошибка `no configuration file provided: not found`
+
+Compose ищет `docker-compose.yml` (или `compose.yaml`) **в текущей папке**.
+
+- Выполните `pwd` и убедитесь, что это корень проекта (рядом лежат `docker-compose.yml`, `pull.sh`, каталог `backend/`).
+- Чаще всего причина — клон репозитория **без** ` .` в конце `git clone`, из‑за чего файлы оказались в подпапке. Зайдите в неё или клонируйте заново в пустой каталог с `git clone … .` (см. §3).
+- Явный путь:  
+  `docker compose -f /opt/migraine-calendar-ai/docker-compose.yml up -d`  
+  (подставьте свой каталог, где реально лежит файл).

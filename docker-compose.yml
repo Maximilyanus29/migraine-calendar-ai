@@ -1,6 +1,7 @@
+# Образы с AWS Public ECR (зеркало library/*), чтобы не упираться в лимит анонимных pull с Docker Hub
 services:
   postgres:
-    image: postgres:16-alpine
+    image: public.ecr.aws/docker/library/postgres:16-alpine
     environment:
       POSTGRES_DB: migraine
       POSTGRES_USER: migraine
@@ -38,7 +39,7 @@ services:
       - ./backend:/var/www/html
 
   nginx:
-    image: nginx:1.27-alpine
+    image: public.ecr.aws/docker/library/nginx:1.27-alpine
     depends_on:
       - php
     ports:
