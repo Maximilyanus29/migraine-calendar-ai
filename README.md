@@ -26,7 +26,7 @@
 docker compose up --build -d
 ```
 
-Приложение: `http://localhost:8081`
+Приложение: `http://localhost` (в `docker-compose.yml` порт **80:80**)
 
 ## Demo account
 - email: `demo@example.com`
@@ -100,6 +100,8 @@ Service worker регистрируется только в production (`resourc
 Кэшируются только статика и SPA shell; API (`/api/*`) не кэшируется сервис-воркером.
 
 ## CI/CD (GitHub Actions)
+Подробный чеклист первого развёртывания на VPS и настройка ключей: **[docs/deploy.md](docs/deploy.md)**.
+
 Добавлены workflow:
 - `.github/workflows/ci.yml`:
   - backend: `pint`, `phpstan`, `phpunit` (с PostgreSQL service)
@@ -112,9 +114,11 @@ Service worker регистрируется только в production (`resourc
 Нужные GitHub Secrets для деплоя:
 - `SSH_HOST`
 - `SSH_USER`
-- `SSH_KEY`
-- `SSH_PORT`
-- `APP_URL` (например `https://your-domain.com`)
+- `SSH_KEY` (приватный ключ целиком, лучше отдельный deploy-ключ)
+- `SSH_PORT` (необязательно; если не задан — используется **22**)
+- `APP_URL` (например `https://your-domain.com` — для `smoke.sh`)
+
+Пример продакшен-переменных для сервера: `backend/.env.production.example` (копируете в `backend/.env` на VPS, без коммита).
 
 ## Быстрая проверка API
 ```bash

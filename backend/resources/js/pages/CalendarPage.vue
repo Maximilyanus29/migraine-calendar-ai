@@ -5,10 +5,10 @@
     @touchend="onTouchEnd"
     @wheel.prevent="onWheel"
   >
-    <div class="calendar-head">
-      <button class="btn" @click="changeMonth(-1)">←</button>
+    <div class="calendar-head" data-testid="calendar-head">
+      <button type="button" class="btn" aria-label="Предыдущий месяц" @click="changeMonth(-1)">←</button>
       <h1>{{ monthLabel }}</h1>
-      <button class="btn" :disabled="!canGoNextMonth" @click="changeMonth(1)">→</button>
+      <button type="button" class="btn" :disabled="!canGoNextMonth" aria-label="Следующий месяц" @click="changeMonth(1)">→</button>
     </div>
 
     <Transition :name="transitionName" mode="out-in">
@@ -17,7 +17,7 @@
           <div v-for="day in weekdayNames" :key="day" class="weekday">{{ day }}</div>
         </div>
 
-        <div class="calendar-grid">
+        <div class="calendar-grid" data-testid="calendar-grid">
           <div
             v-for="day in gridDays"
             :key="day.key"
@@ -48,6 +48,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { apiRequest } from '../lib/api';
+import { attacksToSegmentsForDay, intensityColorRgba } from '../lib/attackSegments';
 
 const router = useRouter();
 const now = new Date();
@@ -76,39 +77,25 @@ const gridDays = computed(() => buildMonthGrid(currentMonth.value));
 
 const segmentsByDay = computed(() => {
   const map = {};
+  const now = new Date();
 
   for (const day of gridDays.value) {
-    const dayStart = new Date(day.date.getFullYear(), day.date.getMonth(), day.date.getDate());
-    const dayEnd = new Date(dayStart);
-    dayEnd.setDate(dayEnd.getDate() + 1);
-
-    for (const attack of attacks.value) {
-      const attackStart = new Date(attack.start_at);
-      const attackEnd = attack.end_at ? new Date(attack.end_at) : new Date();
-
-      const segmentStart = new Date(Math.max(dayStart.getTime(), attackStart.getTime()));
-      const segmentEnd = new Date(Math.min(dayEnd.getTime(), attackEnd.getTime()));
-
-      if (segmentStart >= segmentEnd) {
-        continue;
-      }
-
-      const dayMs = 24 * 60 * 60 * 1000;
-      const offset = ((segmentStart.getTime() - dayStart.getTime()) / dayMs) * 100;
-      const width = ((segmentEnd.getTime() - segmentStart.getTime()) / dayMs) * 100;
-
+    for (const segment of attacksToSegmentsForDay(day.date, attacks.value, now)) {
       if (!map[day.key]) {
         map[day.key] = [];
       }
 
+      const attack = attacks.value.find((a) => a.id === segment.attack_id);
+      const attackStart = attack ? new Date(attack.start_at) : null;
+      const attackEnd = attack?.end_at ? new Date(attack.end_at) : null;
+
       map[day.key].push({
-        attack_id: attack.id,
-        offset,
-        width,
-        intensity: attack.intensity,
-        roundLeft: segmentStart.getTime() === attackStart.getTime(),
-        roundRight: attack.end_at ? segmentEnd.getTime() === attackEnd.getTime() : false,
-        title: `${formatDateTime(attackStart)} - ${attack.end_at ? formatDateTime(attackEnd) : 'сейчас'}; интенсивность ${attack.intensity}`,
+        ...segment,
+        roundRight: attack?.end_at ? segment.roundRight : false,
+        title:
+          attackStart
+            ? `${formatDateTime(attackStart)} - ${attackEnd ? formatDateTime(attackEnd) : 'сейчас'}; интенсивность ${segment.intensity}`
+            : `Приступ #${segment.attack_id}`,
       });
     }
   }
@@ -120,19 +107,12 @@ function segmentStyle(segment) {
   return {
     left: `${segment.offset}%`,
     width: `${segment.width}%`,
-    background: intensityColor(segment.intensity),
+    background: intensityColorRgba(segment.intensity),
     borderTopLeftRadius: segment.roundLeft ? '15px' : '0',
     borderBottomLeftRadius: segment.roundLeft ? '15px' : '0',
     borderTopRightRadius: segment.roundRight ? '15px' : '0',
     borderBottomRightRadius: segment.roundRight ? '15px' : '0',
   };
-}
-
-function intensityColor(intensity) {
-  if (intensity <= 3) return 'rgba(53, 161, 107, 0.45)';
-  if (intensity <= 6) return 'rgba(213, 164, 25, 0.45)';
-  if (intensity <= 8) return 'rgba(214, 106, 33, 0.45)';
-  return 'rgba(212, 63, 63, 0.45)';
 }
 
 function changeMonth(delta) {

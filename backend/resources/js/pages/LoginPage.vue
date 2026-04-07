@@ -6,21 +6,21 @@
     <form @submit.prevent="submit" class="form-grid">
       <label>
         Email
-        <input v-model="email" type="email" required />
+        <input v-model="email" type="email" required data-testid="login-email" autocomplete="username" />
       </label>
 
       <label>
         Пароль
-        <input v-model="password" type="password" required />
+        <input v-model="password" type="password" required data-testid="login-password" autocomplete="current-password" />
       </label>
 
       <p class="error" v-if="errorMessage">{{ errorMessage }}</p>
 
-      <button class="btn primary" :disabled="loading">
+      <button type="submit" class="btn primary" :disabled="loading" data-testid="login-submit">
         {{ loading ? 'Вход...' : 'Войти' }}
       </button>
 
-      <button type="button" class="btn" :disabled="loading" @click="loginAsDemo">
+      <button type="button" class="btn" :disabled="loading" data-testid="login-demo" @click="loginAsDemo">
         Войти в демо-аккаунт
       </button>
       

@@ -18,7 +18,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          port: ${{ secrets.SSH_PORT || '22' }}
           script_stop: true
           script: |
             cd /opt/migraine-calendar-ai
@@ -32,7 +32,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          port: ${{ secrets.SSH_PORT || '22' }}
           script_stop: true
           script: |
             cd /opt/migraine-calendar-ai

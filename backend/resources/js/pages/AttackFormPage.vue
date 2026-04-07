@@ -1,6 +1,6 @@
 <template>
-  <section class="card">
-    <h1>{{ isEdit ? 'Редактирование приступа' : 'Новый приступ' }}</h1>
+  <section class="card" data-testid="attack-form">
+    <h1 data-testid="attack-form-title">{{ isEdit ? 'Редактирование приступа' : 'Новый приступ' }}</h1>
 
     <form class="form-grid" @submit.prevent="save">
       <label>
@@ -16,7 +16,7 @@
 
       <label>
         Интенсивность (1-10)
-        <input v-model.number="form.intensity" type="number" min="1" max="10" required />
+        <input v-model.number="form.intensity" type="number" min="1" max="10" required data-testid="attack-intensity" />
       </label>
 
       <label>
@@ -247,9 +247,13 @@
       <p class="error" v-if="errorMessage">{{ errorMessage }}</p>
 
       <div class="actions">
-        <button class="btn primary" :disabled="loading">{{ loading ? 'Сохраняем...' : 'Сохранить' }}</button>
+        <button type="submit" class="btn primary" :disabled="loading" data-testid="attack-save">
+          {{ loading ? 'Сохраняем...' : 'Сохранить' }}
+        </button>
         <button class="btn" type="button" @click="backToCalendar">Отмена</button>
-        <button class="btn danger" v-if="isEdit" type="button" @click="removeAttack">Удалить</button>
+        <button class="btn danger" v-if="isEdit" type="button" data-testid="attack-delete" @click="removeAttack">
+          Удалить
+        </button>
       </div>
     </form>
   </section>
