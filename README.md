@@ -58,12 +58,12 @@ docker run --rm -u $(id -u):$(id -g) \
 ## Smoke тесты после деплоя
 Быстрая проверка основных сценариев API:
 ```bash
-APP_URL=http://localhost:8081 ./smoke.sh
+APP_URL=http://localhost ./smoke.sh
 ```
 
 Проверка сценария модерации (approve/reject):
 ```bash
-APP_URL=http://localhost:8081 ./smoke-admin.sh
+APP_URL=http://localhost ./smoke-admin.sh
 ```
 
 В `pull.sh` smoke-проверки запускаются автоматически.
@@ -122,12 +122,12 @@ Service worker регистрируется только в production (`resourc
 
 ## Быстрая проверка API
 ```bash
-curl -i -c cookie.txt -X POST http://localhost:8081/api/v1/auth/login \
+curl -i -c cookie.txt -X POST http://localhost/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"demo@example.com","password":"password"}'
 
-curl -b cookie.txt http://localhost:8081/api/v1/auth/me
-curl -b cookie.txt http://localhost:8081/api/v1/meta/options
+curl -b cookie.txt http://localhost/api/v1/auth/me
+curl -b cookie.txt http://localhost/api/v1/meta/options
 ```
 
 ## Примечание

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_DIR="/opt/migraine-calendar-ai"
-APP_URL="${APP_URL:-http://localhost:8081}"
+APP_URL="${APP_URL:-http://localhost}"
 RUN_SEED="${RUN_SEED:-1}"
 RUN_SMOKE="${RUN_SMOKE:-1}"
 RUN_SMOKE_ADMIN="${RUN_SMOKE_ADMIN:-0}"

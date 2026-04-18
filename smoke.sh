@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_URL="${APP_URL:-http://localhost:8081}"
+APP_URL="${APP_URL:-http://localhost}"
 
 DEMO_EMAIL="${DEMO_EMAIL:-demo@example.com}"
 DEMO_PASSWORD="${DEMO_PASSWORD:-password}"
