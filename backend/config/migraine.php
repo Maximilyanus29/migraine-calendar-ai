@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'custom_options_max_per_category' => (int) env('CUSTOM_OPTIONS_MAX_PER_CATEGORY', 50),
+
     'options' => [
         'triggers' => [
             'weather', 'sleep_deprivation', 'hunger', 'daily_routine_disruption',

@@ -32,6 +32,11 @@ router.beforeEach(async (to) => {
 });
 
 app.use(router);
+
+app.config.errorHandler = (error, _instance, info) => {
+  console.error('Vue render error:', error, info);
+};
+
 app.mount('#app');
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

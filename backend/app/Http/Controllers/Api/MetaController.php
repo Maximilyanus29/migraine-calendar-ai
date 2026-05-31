@@ -28,6 +28,7 @@ class MetaController extends Controller
         if (Schema::hasTable('custom_triggers')) {
             $customTriggers = CustomTrigger::query()
                 ->where('user_id', $user->id)
+                ->where('status', '!=', 'rejected')
                 ->orderBy('category')
                 ->orderBy('name')
                 ->get(['id', 'category', 'name']);

@@ -10,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\Rule;
 
 class AttackController extends Controller
 {
@@ -120,12 +119,6 @@ class AttackController extends Controller
 
     private function validatedPayload(Request $request, int $userId): array
     {
-        $allowedTriggers = $this->allowedCategoryValues('triggers', $userId);
-        $allowedPainTypes = $this->allowedCategoryValues('pain_types', $userId);
-        $allowedLocalizations = $this->allowedCategoryValues('localizations', $userId);
-        $allowedSymptoms = $this->allowedCategoryValues('symptoms', $userId);
-        $allowedAuras = $this->allowedCategoryValues('auras', $userId);
-
         $validated = $request->validate([
             'start_at' => ['required', 'date', 'before_or_equal:now'],
             'end_at' => ['nullable', 'date', 'after:start_at', 'before_or_equal:now'],
@@ -133,15 +126,15 @@ class AttackController extends Controller
             'medications' => ['nullable', 'string'],
             'relief' => ['nullable', 'boolean'],
             'pain_types' => ['sometimes', 'array'],
-            'pain_types.*' => ['string', Rule::in($allowedPainTypes)],
+            'pain_types.*' => $this->optionValueRules('pain_types', $userId),
             'localizations' => ['sometimes', 'array'],
-            'localizations.*' => ['string', Rule::in($allowedLocalizations)],
+            'localizations.*' => $this->optionValueRules('localizations', $userId),
             'triggers' => ['sometimes', 'array'],
-            'triggers.*' => ['string', Rule::in($allowedTriggers)],
+            'triggers.*' => $this->optionValueRules('triggers', $userId),
             'symptoms' => ['sometimes', 'array'],
-            'symptoms.*' => ['string', Rule::in($allowedSymptoms)],
+            'symptoms.*' => $this->optionValueRules('symptoms', $userId),
             'auras' => ['sometimes', 'array'],
-            'auras.*' => ['string', Rule::in($allowedAuras)],
+            'auras.*' => $this->optionValueRules('auras', $userId),
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -152,21 +145,43 @@ class AttackController extends Controller
         return $validated;
     }
 
-    private function allowedCategoryValues(string $category, int $userId): array
+    /**
+     * @return array<int, \Closure|string>
+     */
+    private function optionValueRules(string $category, int $userId): array
     {
-        $base = array_values(config('migraine.options.'.$category, []));
-        if (! Schema::hasTable('custom_triggers')) {
-            return $base;
+        return [
+            'string',
+            function (string $attribute, mixed $value, \Closure $fail) use ($category, $userId): void {
+                if (! is_string($value) || ! $this->isAllowedOptionValue($value, $category, $userId)) {
+                    $fail('Недопустимое значение.');
+                }
+            },
+        ];
+    }
+
+    private function isAllowedOptionValue(string $value, string $category, int $userId): bool
+    {
+        $base = config('migraine.options.'.$category, []);
+        if (in_array($value, $base, true)) {
+            return true;
         }
 
-        $custom = CustomTrigger::query()
-            ->where('user_id', $userId)
-            ->where('category', $category)
-            ->pluck('id')
-            ->map(static fn (int $id): string => 'custom:'.$id)
-            ->all();
+        if (preg_match('/^local:[a-zA-Z0-9_-]{8,64}$/', $value) === 1) {
+            return true;
+        }
 
-        return array_values(array_unique(array_merge($base, $custom)));
+        if (preg_match('/^custom:\d+$/', $value) !== 1 || ! Schema::hasTable('custom_triggers')) {
+            return false;
+        }
+
+        $id = (int) substr($value, 7);
+
+        return CustomTrigger::query()
+            ->where('user_id', $userId)
+            ->where('id', $id)
+            ->where('status', '!=', 'rejected')
+            ->exists();
     }
 
     private function authUserId(): ?int

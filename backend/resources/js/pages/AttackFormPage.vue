@@ -1,8 +1,18 @@
 <template>
   <section class="card" data-testid="attack-form">
+    <div v-if="pageLoading" class="page-loading" data-testid="attack-form-loading">
+      <p class="muted">Загрузка формы...</p>
+    </div>
+
+    <div v-else-if="loadError" class="page-loading">
+      <p class="error">{{ loadError }}</p>
+      <button type="button" class="btn" @click="backToCalendar">Вернуться в календарь</button>
+    </div>
+
+    <template v-else>
     <h1 data-testid="attack-form-title">{{ isEdit ? 'Редактирование приступа' : 'Новый приступ' }}</h1>
 
-    <form class="form-grid" @submit.prevent="save">
+    <form class="form-grid" @submit.prevent="save" @keydown.enter="onFormEnter">
       <label>
         Дата начала
         <input v-model="form.start_at" type="datetime-local" required />
@@ -41,15 +51,20 @@
       <fieldset>
         <legend>Что спровоцировало</legend>
         <div class="chip-grid">
-          <label
-            v-for="item in standardOptions('triggers')"
+          <div
+            v-for="item in allOptions('triggers')"
             :key="item"
             class="chip"
-            :class="{ selected: form.triggers.includes(item) }"
+            :class="{ selected: isSelected('triggers', item) }"
+            role="checkbox"
+            :aria-checked="isSelected('triggers', item)"
+            tabindex="0"
+            @click="toggleOption('triggers', item)"
+            @keydown.enter.prevent="toggleOption('triggers', item)"
+            @keydown.space.prevent="toggleOption('triggers', item)"
           >
-            <input type="checkbox" :value="item" v-model="form.triggers" />
             <span>{{ optionLabel('triggers', item) }}</span>
-          </label>
+          </div>
         </div>
 
         <div class="custom-inline-add">
@@ -66,32 +81,25 @@
         </div>
         <p class="muted" v-if="customOptionHint.triggers">{{ customOptionHint.triggers }}</p>
         <p class="error" v-if="customOptionError.triggers">{{ customOptionError.triggers }}</p>
-        <div class="chip-grid" v-if="customOptions('triggers').length > 0">
-          <label
-            v-for="item in customOptions('triggers')"
-            :key="item"
-            class="chip"
-            :class="{ selected: form.triggers.includes(item) }"
-          >
-            <input type="checkbox" :value="item" v-model="form.triggers" />
-            <span>{{ optionLabel('triggers', item) }}</span>
-            <small class="chip-note">{{ statusLabel(customStatus('triggers', item)) }}</small>
-          </label>
-        </div>
       </fieldset>
 
       <fieldset>
         <legend>Характер боли</legend>
         <div class="chip-grid">
-          <label
-            v-for="item in standardOptions('pain_types')"
+          <div
+            v-for="item in allOptions('pain_types')"
             :key="item"
             class="chip"
-            :class="{ selected: form.pain_types.includes(item) }"
+            :class="{ selected: isSelected('pain_types', item) }"
+            role="checkbox"
+            :aria-checked="isSelected('pain_types', item)"
+            tabindex="0"
+            @click="toggleOption('pain_types', item)"
+            @keydown.enter.prevent="toggleOption('pain_types', item)"
+            @keydown.space.prevent="toggleOption('pain_types', item)"
           >
-            <input type="checkbox" :value="item" v-model="form.pain_types" />
             <span>{{ optionLabel('pain_types', item) }}</span>
-          </label>
+          </div>
         </div>
         <div class="custom-inline-add">
           <input
@@ -107,32 +115,25 @@
         </div>
         <p class="muted" v-if="customOptionHint.pain_types">{{ customOptionHint.pain_types }}</p>
         <p class="error" v-if="customOptionError.pain_types">{{ customOptionError.pain_types }}</p>
-        <div class="chip-grid" v-if="customOptions('pain_types').length > 0">
-          <label
-            v-for="item in customOptions('pain_types')"
-            :key="item"
-            class="chip"
-            :class="{ selected: form.pain_types.includes(item) }"
-          >
-            <input type="checkbox" :value="item" v-model="form.pain_types" />
-            <span>{{ optionLabel('pain_types', item) }}</span>
-            <small class="chip-note">{{ statusLabel(customStatus('pain_types', item)) }}</small>
-          </label>
-        </div>
       </fieldset>
 
       <fieldset>
         <legend>Локализация</legend>
         <div class="chip-grid">
-          <label
-            v-for="item in standardOptions('localizations')"
+          <div
+            v-for="item in allOptions('localizations')"
             :key="item"
             class="chip"
-            :class="{ selected: form.localizations.includes(item) }"
+            :class="{ selected: isSelected('localizations', item) }"
+            role="checkbox"
+            :aria-checked="isSelected('localizations', item)"
+            tabindex="0"
+            @click="toggleOption('localizations', item)"
+            @keydown.enter.prevent="toggleOption('localizations', item)"
+            @keydown.space.prevent="toggleOption('localizations', item)"
           >
-            <input type="checkbox" :value="item" v-model="form.localizations" />
             <span>{{ optionLabel('localizations', item) }}</span>
-          </label>
+          </div>
         </div>
         <div class="custom-inline-add">
           <input
@@ -148,32 +149,25 @@
         </div>
         <p class="muted" v-if="customOptionHint.localizations">{{ customOptionHint.localizations }}</p>
         <p class="error" v-if="customOptionError.localizations">{{ customOptionError.localizations }}</p>
-        <div class="chip-grid" v-if="customOptions('localizations').length > 0">
-          <label
-            v-for="item in customOptions('localizations')"
-            :key="item"
-            class="chip"
-            :class="{ selected: form.localizations.includes(item) }"
-          >
-            <input type="checkbox" :value="item" v-model="form.localizations" />
-            <span>{{ optionLabel('localizations', item) }}</span>
-            <small class="chip-note">{{ statusLabel(customStatus('localizations', item)) }}</small>
-          </label>
-        </div>
       </fieldset>
 
       <fieldset>
         <legend>Симптомы</legend>
         <div class="chip-grid">
-          <label
-            v-for="item in standardOptions('symptoms')"
+          <div
+            v-for="item in allOptions('symptoms')"
             :key="item"
             class="chip"
-            :class="{ selected: form.symptoms.includes(item) }"
+            :class="{ selected: isSelected('symptoms', item) }"
+            role="checkbox"
+            :aria-checked="isSelected('symptoms', item)"
+            tabindex="0"
+            @click="toggleOption('symptoms', item)"
+            @keydown.enter.prevent="toggleOption('symptoms', item)"
+            @keydown.space.prevent="toggleOption('symptoms', item)"
           >
-            <input type="checkbox" :value="item" v-model="form.symptoms" />
             <span>{{ optionLabel('symptoms', item) }}</span>
-          </label>
+          </div>
         </div>
         <div class="custom-inline-add">
           <input
@@ -189,32 +183,25 @@
         </div>
         <p class="muted" v-if="customOptionHint.symptoms">{{ customOptionHint.symptoms }}</p>
         <p class="error" v-if="customOptionError.symptoms">{{ customOptionError.symptoms }}</p>
-        <div class="chip-grid" v-if="customOptions('symptoms').length > 0">
-          <label
-            v-for="item in customOptions('symptoms')"
-            :key="item"
-            class="chip"
-            :class="{ selected: form.symptoms.includes(item) }"
-          >
-            <input type="checkbox" :value="item" v-model="form.symptoms" />
-            <span>{{ optionLabel('symptoms', item) }}</span>
-            <small class="chip-note">{{ statusLabel(customStatus('symptoms', item)) }}</small>
-          </label>
-        </div>
       </fieldset>
 
       <fieldset>
         <legend>Аура</legend>
         <div class="chip-grid">
-          <label
-            v-for="item in standardOptions('auras')"
+          <div
+            v-for="item in allOptions('auras')"
             :key="item"
             class="chip"
-            :class="{ selected: form.auras.includes(item) }"
+            :class="{ selected: isSelected('auras', item) }"
+            role="checkbox"
+            :aria-checked="isSelected('auras', item)"
+            tabindex="0"
+            @click="toggleOption('auras', item)"
+            @keydown.enter.prevent="toggleOption('auras', item)"
+            @keydown.space.prevent="toggleOption('auras', item)"
           >
-            <input type="checkbox" :value="item" v-model="form.auras" />
             <span>{{ optionLabel('auras', item) }}</span>
-          </label>
+          </div>
         </div>
         <div class="custom-inline-add">
           <input
@@ -230,18 +217,6 @@
         </div>
         <p class="muted" v-if="customOptionHint.auras">{{ customOptionHint.auras }}</p>
         <p class="error" v-if="customOptionError.auras">{{ customOptionError.auras }}</p>
-        <div class="chip-grid" v-if="customOptions('auras').length > 0">
-          <label
-            v-for="item in customOptions('auras')"
-            :key="item"
-            class="chip"
-            :class="{ selected: form.auras.includes(item) }"
-          >
-            <input type="checkbox" :value="item" v-model="form.auras" />
-            <span>{{ optionLabel('auras', item) }}</span>
-            <small class="chip-note">{{ statusLabel(customStatus('auras', item)) }}</small>
-          </label>
-        </div>
       </fieldset>
 
       <p class="error" v-if="errorMessage">{{ errorMessage }}</p>
@@ -256,16 +231,24 @@
         </button>
       </div>
     </form>
+    </template>
   </section>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { apiRequest } from '../lib/api';
+import { apiRequest, formatApiError } from '../lib/api';
+import {
+  LOCAL_OPTION_CATEGORIES,
+  isLocalKey,
+  migrateLocalCustomOptionsToServer,
+} from '../lib/localCustomOptions';
+import { useAuthStore } from '../stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 const isEdit = computed(() => !!route.params.id);
 
 const options = reactive({
@@ -304,6 +287,8 @@ const reliefSelect = computed({
   },
 });
 
+const pageLoading = ref(true);
+const loadError = ref('');
 const loading = ref(false);
 const errorMessage = ref('');
 const customOptionDraft = reactive({
@@ -321,11 +306,11 @@ const customOptionError = reactive({
   auras: '',
 });
 const customOptionHint = reactive({
-  triggers: 'Можно добавить свой вариант в эту группу.',
-  pain_types: 'Можно добавить свой вариант в эту группу.',
-  localizations: 'Можно добавить свой вариант в эту группу.',
-  symptoms: 'Можно добавить свой вариант в эту группу.',
-  auras: 'Можно добавить свой вариант в эту группу.',
+  triggers: '',
+  pain_types: '',
+  localizations: '',
+  symptoms: '',
+  auras: '',
 });
 const customOptionLoading = reactive({
   triggers: false,
@@ -334,35 +319,71 @@ const customOptionLoading = reactive({
   symptoms: false,
   auras: false,
 });
-const customOptionStatusByCategory = reactive({
-  triggers: {},
-  pain_types: {},
-  localizations: {},
-  symptoms: {},
-  auras: {},
-});
+const localOptionLabels = reactive(
+  Object.fromEntries(LOCAL_OPTION_CATEGORIES.map((category) => [category, {}]))
+);
 
 onMounted(async () => {
-  await loadOptions();
+  loadError.value = '';
   try {
-    await loadCustomOptionStatuses();
-  } catch {
-    for (const key of Object.keys(customOptionHint)) {
-      customOptionHint[key] = 'Не удалось загрузить статусы модерации. Попробуй обновить страницу позже.';
-    }
-  }
+    await loadOptions();
+    await migrateLegacyLocalOptions();
 
-  if (isEdit.value) {
-    await loadAttackForEdit();
-  } else {
-    await hydrateFromLastAttack();
-    applyInitialStartFromCalendarClick();
+    if (isEdit.value) {
+      await loadAttackForEdit();
+    } else {
+      await hydrateFromLastAttack();
+      applyInitialStartFromCalendarClick();
+    }
+
+    ensureLegacyLocalOptionsFromFormValues();
+    ensureFormArrays();
+  } catch (error) {
+    loadError.value = formatApiError(error, 'Не удалось загрузить форму');
+  } finally {
+    pageLoading.value = false;
   }
 });
 
 async function loadOptions() {
   const data = await apiRequest('/meta/options');
-  Object.assign(options, data);
+
+  for (const category of LOCAL_OPTION_CATEGORIES) {
+    options[category] = Array.isArray(data[category]) ? [...data[category]] : [];
+  }
+
+  if (!options.labels || typeof options.labels !== 'object') {
+    options.labels = {};
+  }
+
+  for (const category of LOCAL_OPTION_CATEGORIES) {
+    options.labels[category] = { ...(data.labels?.[category] ?? {}) };
+  }
+}
+
+function ensureFormArrays() {
+  for (const category of LOCAL_OPTION_CATEGORIES) {
+    if (!Array.isArray(form[category])) {
+      form[category] = [];
+    }
+  }
+}
+
+function isSelected(category, item) {
+  return Array.isArray(form[category]) && form[category].includes(item);
+}
+
+function toggleOption(category, item) {
+  if (!Array.isArray(form[category])) {
+    form[category] = [];
+  }
+
+  const index = form[category].indexOf(item);
+  if (index >= 0) {
+    form[category].splice(index, 1);
+  } else {
+    form[category].push(item);
+  }
 }
 
 async function loadAttackForEdit() {
@@ -383,6 +404,7 @@ async function hydrateFromLastAttack() {
   form.symptoms = data.symptoms ?? [];
   form.auras = data.auras ?? [];
   form.notes = data.notes ?? '';
+  ensureFormArrays();
 }
 
 function applyInitialStartFromCalendarClick() {
@@ -390,33 +412,106 @@ function applyInitialStartFromCalendarClick() {
   const queryDate = String(route.query.date || '');
   const ratio = Number(route.query.ratio || 0);
 
-  let start;
-  if (queryDate === toDateKey(now)) {
+  const base = parseDateKey(queryDate) || now;
+  const minutes = Math.round(Math.max(0, Math.min(1, ratio)) * 24 * 60);
+  let start = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 0, minutes);
+
+  if (queryDate === toDateKey(now) && start > now) {
     start = now;
-  } else {
-    const base = parseDateKey(queryDate) || now;
-    const minutes = Math.round(Math.max(0, Math.min(1, ratio)) * 24 * 60);
-    start = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 0, minutes);
   }
 
   form.start_at = toInputDateTime(start);
   form.end_at = '';
 }
 
+function onFormEnter(event) {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  if (target.tagName === 'TEXTAREA') {
+    return;
+  }
+
+  if (target.closest('.custom-inline-add')) {
+    return;
+  }
+
+  event.preventDefault();
+}
+
+function filterSelectableOptions(category) {
+  const allowed = new Set(options[category] ?? []);
+  if (!Array.isArray(form[category])) {
+    return [];
+  }
+  return form[category].filter((key) => allowed.has(key));
+}
+
+async function migrateLegacyLocalOptions() {
+  const userId = auth.user?.id;
+  if (!userId) {
+    return;
+  }
+
+  const migrated = await migrateLocalCustomOptionsToServer(userId, (category, name) =>
+    apiRequest('/custom-options', {
+      method: 'POST',
+      body: { category, name },
+    })
+  );
+
+  if (migrated > 0) {
+    await loadOptions();
+  }
+}
+
 function optionLabel(group, key) {
-  return options.labels?.[group]?.[key] ?? key;
+  return options.labels?.[group]?.[key]
+    ?? localOptionLabels[group]?.[key]
+    ?? (isLocalKey(key) ? 'Свой вариант' : key);
 }
 
-function standardOptions(category) {
-  return (options[category] ?? []).filter((item) => !String(item).startsWith('custom:'));
+function allOptions(category) {
+  return options[category] ?? [];
 }
 
-function customOptions(category) {
-  return (options[category] ?? []).filter((item) => String(item).startsWith('custom:'));
+function registerCustomOption(category, key, label) {
+  if (!options.labels) {
+    options.labels = {};
+  }
+  if (!options[category]) {
+    options[category] = [];
+  }
+  if (!options[category].includes(key)) {
+    options[category].push(key);
+  }
+  if (!options.labels[category]) {
+    options.labels[category] = {};
+  }
+  options.labels[category][key] = label;
+  if (isLocalKey(key)) {
+    localOptionLabels[category][key] = label;
+  }
 }
 
-function customStatus(category, key) {
-  return customOptionStatusByCategory[category]?.[key] ?? null;
+function selectOption(category, key) {
+  if (!isSelected(category, key)) {
+    toggleOption(category, key);
+  }
+}
+
+function ensureLegacyLocalOptionsFromFormValues() {
+  for (const category of LOCAL_OPTION_CATEGORIES) {
+    for (const key of form[category]) {
+      if (!isLocalKey(key) || options[category].includes(key)) {
+        continue;
+      }
+
+      registerCustomOption(category, key, optionLabel(category, key));
+    }
+  }
 }
 
 async function addCustomOption(category) {
@@ -429,43 +524,24 @@ async function addCustomOption(category) {
 
   customOptionLoading[category] = true;
   try {
-    await apiRequest('/custom-options', {
+    const created = await apiRequest('/custom-options', {
       method: 'POST',
       body: { category, name },
     });
-    customOptionDraft[category] = '';
-    customOptionHint[category] = 'Значение добавлено. Можно сразу выбрать.';
     await loadOptions();
-    await loadCustomOptionStatuses();
+    const key = `custom:${created.id}`;
+    selectOption(category, key);
+    customOptionDraft[category] = '';
+    customOptionHint[category] = 'Свой вариант сохранён в аккаунте и выбран.';
   } catch (error) {
     if (error?.status === 429) {
-      customOptionError[category] = 'Слишком много новых значений. Лимит: 10 в день.';
+      customOptionError[category] = 'Слишком много новых значений. Лимит: 10 в день, 2 в минуту.';
     } else {
-      customOptionError[category] = error?.payload?.error || 'Не удалось добавить значение';
+      customOptionError[category] = formatApiError(error, 'Не удалось добавить значение');
     }
   } finally {
     customOptionLoading[category] = false;
   }
-}
-
-async function loadCustomOptionStatuses() {
-  for (const category of Object.keys(customOptionStatusByCategory)) {
-    Object.keys(customOptionStatusByCategory[category]).forEach((key) => {
-      delete customOptionStatusByCategory[category][key];
-    });
-  }
-
-  const items = await apiRequest('/custom-options');
-  for (const item of items) {
-    if (!customOptionStatusByCategory[item.category]) continue;
-    customOptionStatusByCategory[item.category][`custom:${item.id}`] = item.status;
-  }
-}
-
-function statusLabel(status) {
-  if (status === 'approved') return 'подтвержден';
-  if (status === 'rejected') return 'отклонен';
-  return 'на проверке';
 }
 
 function fillForm(data) {
@@ -480,6 +556,7 @@ function fillForm(data) {
   form.symptoms = data.symptoms ?? [];
   form.auras = data.auras ?? [];
   form.notes = data.notes ?? '';
+  ensureFormArrays();
 }
 
 async function save() {
@@ -526,11 +603,11 @@ async function save() {
       intensity: Number(form.intensity),
       medications: form.medications || null,
       relief: form.relief,
-      pain_types: [...form.pain_types],
-      localizations: [...form.localizations],
-      triggers: [...form.triggers],
-      symptoms: [...form.symptoms],
-      auras: [...form.auras],
+      pain_types: filterSelectableOptions('pain_types'),
+      localizations: filterSelectableOptions('localizations'),
+      triggers: filterSelectableOptions('triggers'),
+      symptoms: filterSelectableOptions('symptoms'),
+      auras: filterSelectableOptions('auras'),
       notes: form.notes || null,
     };
 
@@ -545,7 +622,7 @@ async function save() {
     if (error?.status === 429) {
       errorMessage.value = 'Слишком много операций. Попробуй позже.';
     } else {
-      errorMessage.value = error?.payload?.error || 'Ошибка сохранения';
+      errorMessage.value = formatApiError(error, 'Ошибка сохранения');
     }
   } finally {
     loading.value = false;

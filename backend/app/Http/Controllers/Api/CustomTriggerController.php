@@ -28,6 +28,7 @@ class CustomTriggerController extends Controller
 
         $triggers = CustomTrigger::query()
             ->where('user_id', $userId)
+            ->where('status', '!=', 'rejected')
             ->orderBy('category')
             ->orderByDesc('id')
             ->get(['id', 'category', 'name', 'status', 'created_at', 'approved_at']);
@@ -68,14 +69,28 @@ class CustomTriggerController extends Controller
             return response()->json(['error' => 'Такое значение уже есть в общем списке', 'details' => []], 422);
         }
 
-        $exists = CustomTrigger::query()
+        $existing = CustomTrigger::query()
             ->where('user_id', $userId)
             ->where('category', $category)
             ->where('name_normalized', $normalized)
-            ->exists();
+            ->first();
 
-        if ($exists) {
-            return response()->json(['error' => 'Такое пользовательское значение уже добавлено', 'details' => []], 422);
+        if ($existing !== null) {
+            return response()->json(['data' => $existing]);
+        }
+
+        $maxPerCategory = max(1, (int) config('migraine.custom_options_max_per_category', 50));
+        $currentCount = CustomTrigger::query()
+            ->where('user_id', $userId)
+            ->where('category', $category)
+            ->where('status', '!=', 'rejected')
+            ->count();
+
+        if ($currentCount >= $maxPerCategory) {
+            return response()->json([
+                'error' => "Достигнут лимит своих вариантов ({$maxPerCategory} на категорию)",
+                'details' => [],
+            ], 422);
         }
 
         $trigger = CustomTrigger::create([

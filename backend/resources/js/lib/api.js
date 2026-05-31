@@ -1,3 +1,29 @@
+export function formatApiError(error, fallback = 'Ошибка запроса') {
+  if (!error) {
+    return fallback;
+  }
+
+  if (!error.payload && error.message) {
+    return error.message;
+  }
+
+  const payload = error.payload;
+  if (payload?.error) {
+    return payload.error;
+  }
+  if (payload?.message) {
+    return payload.message;
+  }
+  if (payload?.errors && typeof payload.errors === 'object') {
+    const first = Object.values(payload.errors).flat()[0];
+    if (first) {
+      return String(first);
+    }
+  }
+
+  return error.message || fallback;
+}
+
 export async function apiRequest(path, options = {}) {
   const { method = 'GET', body } = options;
 
@@ -22,7 +48,7 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    const error = new Error(payload?.error || `HTTP ${response.status}`);
+    const error = new Error(payload?.error || payload?.message || `HTTP ${response.status}`);
     error.status = response.status;
     error.payload = payload;
     throw error;
