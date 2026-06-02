@@ -102,6 +102,8 @@ Service worker регистрируется только в production (`resourc
 Кэшируются только статика и SPA shell; API (`/api/*`) не кэшируется сервис-воркером.
 
 ## CI/CD (GitHub Actions)
+**Как задеплоить самому (пошагово):** **[docs/deploy-instructions.md](docs/deploy-instructions.md)** · шпаргалка: [docs/deploy-cheatsheet.md](docs/deploy-cheatsheet.md)
+
 Подробный чеклист первого развёртывания на VPS и настройка ключей: **[docs/deploy.md](docs/deploy.md)**.
 
 Добавлены workflow:

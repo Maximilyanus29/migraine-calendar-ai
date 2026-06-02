@@ -7,20 +7,23 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     public function register(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
         ]);
 
+        $email = mb_strtolower($data['email']);
+        $name = mb_substr(Str::before($email, '@') ?: $email, 0, 120);
+
         $user = User::create([
-            'name' => $data['name'],
-            'email' => mb_strtolower($data['email']),
+            'name' => $name,
+            'email' => $email,
             'password' => $data['password'],
             'timezone' => 'Europe/Moscow',
         ]);

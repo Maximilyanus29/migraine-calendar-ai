@@ -13,14 +13,28 @@
     <h1 data-testid="attack-form-title">{{ isEdit ? 'Редактирование приступа' : 'Новый приступ' }}</h1>
 
     <form class="form-grid" @submit.prevent="save" @keydown.enter="onFormEnter">
+      <div class="actions form-sticky-actions">
+        <button type="submit" class="btn primary" :disabled="loading" data-testid="attack-save-top">
+          {{ loading ? 'Сохраняем...' : 'Сохранить' }}
+        </button>
+        <button class="btn" type="button" @click="backToCalendar">Отмена</button>
+        <button class="btn danger" v-if="isEdit" type="button" data-testid="attack-delete-top" @click="removeAttack">
+          Удалить
+        </button>
+      </div>
+
       <label>
         Дата начала
-        <input v-model="form.start_at" type="datetime-local" required />
+        <span class="datetime-field">
+          <input v-model="form.start_at" type="datetime-local" required />
+        </span>
       </label>
 
       <label>
         Дата окончания
-        <input v-model="form.end_at" type="datetime-local" />
+        <span class="datetime-field">
+          <input v-model="form.end_at" type="datetime-local" />
+        </span>
       </label>
       <p class="muted" v-if="durationLabel">Длительность: {{ durationLabel }}</p>
 

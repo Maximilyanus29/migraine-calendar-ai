@@ -30,10 +30,10 @@ export const useAuthStore = defineStore('auth', {
       });
       return this.user;
     },
-    async register(name, email, password) {
+    async register(email, password) {
       this.user = await apiRequest('/auth/register', {
         method: 'POST',
-        body: { name, email, password },
+        body: { email, password },
       });
       return this.user;
     },

@@ -7,6 +7,7 @@ RUN_SEED="${RUN_SEED:-1}"
 RUN_SMOKE="${RUN_SMOKE:-1}"
 RUN_SMOKE_ADMIN="${RUN_SMOKE_ADMIN:-0}"
 SKIP_PULL="${SKIP_PULL:-0}"
+SKIP_BUILD="${SKIP_BUILD:-1}"
 DEPLOY_REF="${DEPLOY_REF:-}"
 
 DEPLOY_PREV_FILE=".deploy_previous"
@@ -35,7 +36,12 @@ docker run --rm -u "$(id -u):$(id -g)" \
   public.ecr.aws/docker/library/node:22-alpine sh -lc "npm ci && npm run build"
 
 echo "[deploy] Restarting services..."
-docker compose up --build -d
+if [[ "$SKIP_BUILD" == "1" ]]; then
+  echo "[deploy] SKIP_BUILD=1, reusing existing images (code is bind-mounted)"
+  docker compose up -d
+else
+  docker compose up --build -d
+fi
 
 echo "[deploy] Running migrations..."
 docker compose exec -T php php artisan migrate --force
@@ -47,6 +53,9 @@ fi
 
 echo "[deploy] Clearing caches..."
 docker compose exec -T php php artisan optimize:clear
+docker compose exec -T php sh -c 'chown -R www-data:www-data storage bootstrap/cache && chmod -R ug+rwX storage bootstrap/cache'
+docker compose exec -T -u www-data php php artisan config:cache
+docker compose exec -T -u www-data php php artisan view:cache
 
 if [[ "$RUN_SMOKE" == "1" ]]; then
   echo "[deploy] Running smoke checks via smoke.sh..."

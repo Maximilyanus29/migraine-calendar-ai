@@ -5,19 +5,21 @@
       <button class="btn primary" @click="applyUpdate">Обновить</button>
     </div>
     <AppHeader v-if="auth.isAuthenticated" />
-    <main class="page-wrap">
+    <main class="page-wrap" :class="{ 'page-wrap--calendar': isCalendarRoute }">
       <RouterView />
     </main>
   </div>
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { RouterView } from 'vue-router';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
 import { useAuthStore } from './stores/auth';
 import AppHeader from './components/AppHeader.vue';
 
 const auth = useAuthStore();
+const route = useRoute();
+const isCalendarRoute = computed(() => route.path === '/calendar');
 const updateAvailable = ref(false);
 
 let controllerChangeBound = false;

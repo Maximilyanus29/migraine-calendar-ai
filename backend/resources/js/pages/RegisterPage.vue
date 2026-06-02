@@ -4,11 +4,6 @@
 
     <form @submit.prevent="submit" class="form-grid">
       <label>
-        Имя
-        <input v-model="name" type="text" maxlength="120" required />
-      </label>
-
-      <label>
         Email
         <input v-model="email" type="email" maxlength="190" required />
       </label>
@@ -37,7 +32,6 @@ import { useAuthStore } from '../stores/auth';
 const router = useRouter();
 const auth = useAuthStore();
 
-const name = ref('');
 const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
@@ -48,7 +42,7 @@ async function submit() {
   errorMessage.value = '';
 
   try {
-    await auth.register(name.value.trim(), email.value.trim(), password.value);
+    await auth.register(email.value.trim(), password.value);
     await router.push('/calendar');
   } catch (error) {
     const details = error?.payload?.errors;

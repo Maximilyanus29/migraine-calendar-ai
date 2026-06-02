@@ -13,13 +13,13 @@ class AuthApiTest extends TestCase
     public function test_user_can_register_and_read_me(): void
     {
         $response = $this->postJson('/api/v1/auth/register', [
-            'name' => 'Test User',
             'email' => 'tester@example.com',
             'password' => 'password123',
         ]);
 
         $response->assertCreated()
             ->assertJsonPath('data.email', 'tester@example.com')
+            ->assertJsonPath('data.name', 'tester')
             ->assertJsonPath('data.is_admin', false);
 
         $this->getJson('/api/v1/auth/me')

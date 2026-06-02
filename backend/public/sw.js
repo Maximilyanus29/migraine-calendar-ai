@@ -31,6 +31,36 @@ self.addEventListener('message', (event) => {
   }
 });
 
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return cache.match(request);
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const networkPromise = fetch(request)
+    .then((response) => {
+      if (response && response.status === 200) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => null);
+
+  return cached || networkPromise || Response.error();
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') {
@@ -46,39 +76,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          return cached || caches.match('/');
-        })
-    );
+  if (request.mode === 'navigate' || url.pathname.startsWith('/build/')) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
-  const staleWhileRevalidate = async () => {
-    const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request);
-
-    const networkPromise = fetch(request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          cache.put(request, response.clone());
-        }
-        return response;
-      })
-      .catch(() => null);
-
-    return cached || networkPromise || Response.error();
-  };
-
-  event.respondWith(
-    staleWhileRevalidate()
-  );
+  event.respondWith(staleWhileRevalidate());
 });
